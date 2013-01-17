@@ -390,7 +390,6 @@ int DataManager::SetValue(const string varName, string value, int persist /* = 0
 
     if (pos->second.second != 0)
         SaveValues();
-
     gui_notifyVarChange(varName.c_str(), value.c_str());
     return 0;
 }
@@ -629,14 +628,14 @@ void DataManager::SetDefaultValues()
     if (strlen(EXPAND(SP2_DISPLAY_NAME)))    mConstValues.insert(make_pair(TW_SP2_PARTITION_NAME_VAR, EXPAND(SP2_DISPLAY_NAME)));
 #else
 	#ifdef SP2_NAME
-		if (strlen(EXPAND(SP2_NAME)))    mConstValues.insert(make_pair(TW_SP1_PARTITION_NAME_VAR, EXPAND(SP2_NAME)));
+		if (strlen(EXPAND(SP2_NAME)))    mConstValues.insert(make_pair(TW_SP2_PARTITION_NAME_VAR, EXPAND(SP2_NAME)));
 	#endif
 #endif
 #ifdef SP3_DISPLAY_NAME
     if (strlen(EXPAND(SP3_DISPLAY_NAME)))    mConstValues.insert(make_pair(TW_SP3_PARTITION_NAME_VAR, EXPAND(SP3_DISPLAY_NAME)));
 #else
 	#ifdef SP3_NAME
-		if (strlen(EXPAND(SP3_NAME)))    mConstValues.insert(make_pair(TW_SP1_PARTITION_NAME_VAR, EXPAND(SP3_NAME)));
+		if (strlen(EXPAND(SP3_NAME)))    mConstValues.insert(make_pair(TW_SP3_PARTITION_NAME_VAR, EXPAND(SP3_NAME)));
 	#endif
 #endif
 
@@ -844,8 +843,7 @@ void DataManager::Output_Version(void) {
 	}
 	Path += "/TWRP/.version";
 	if (TWFunc::Path_Exists(Path)) {
-		Command = "rm -f " + Path;
-		system(Command.c_str());
+		unlink(Path.c_str());
 	}
 	FILE *fp = fopen(Path.c_str(), "w");
 	if (fp == NULL) {

@@ -31,7 +31,8 @@
 #include <time.h>
 #include <errno.h>
 #include <fcntl.h>
-
+#include <iostream>
+#include <iomanip>
 #include "variables.h"
 #include "common.h"
 #include "ui.h"
@@ -102,12 +103,9 @@ int TWPartitionManager::Write_Fstab(void) {
 	}
 	for (iter = Partitions.begin(); iter != Partitions.end(); iter++) {
 		if ((*iter)->Can_Be_Mounted) {
-			if ((*iter)->Current_File_System == "vfat")
-			{
+			if ((*iter)->Current_File_System == "vfat") {
 				Line = (*iter)->Actual_Block_Device + " " + (*iter)->Mount_Point + " " + (*iter)->Current_File_System + " rw,shortname=mixed,utf8\n";
-			}
-			else
-			{
+			} else {
 				Line = (*iter)->Actual_Block_Device + " " + (*iter)->Mount_Point + " " + (*iter)->Current_File_System + " rw\n";
 			}
 			fputs(Line.c_str(), fp);
@@ -136,68 +134,72 @@ void TWPartitionManager::Output_Partition_Logging(void) {
 void TWPartitionManager::Output_Partition(TWPartition* Part) {
 	unsigned long long mb = 1048576;
 
+	printf("%s | %s | Size: %iMB", Part->Mount_Point.c_str(), Part->Actual_Block_Device.c_str(), (int)(Part->Size / mb));
 	if (Part->Can_Be_Mounted) {
-		printf("%s | %s | Size: %iMB Used: %iMB Free: %iMB Backup Size: %iMB\n   Flags: ", Part->Mount_Point.c_str(), Part->Actual_Block_Device.c_str(), (int)(Part->Size / mb), (int)(Part->Used / mb), (int)(Part->Free / mb), (int)(Part->Backup_Size / mb));
-		if (Part->Can_Be_Wiped)
-			printf("Can_Be_Wiped ");
-		if (Part->Wipe_During_Factory_Reset)
-			printf("Wipe_During_Factory_Reset ");
-		if (Part->Wipe_Available_in_GUI)
-			printf("Wipe_Available_in_GUI ");
-		if (Part->Is_SubPartition)
-			printf("Is_SubPartition ");
-		if (Part->Has_SubPartition)
-			printf("Has_SubPartition ");
-		if (Part->Removable)
-			printf("Removable ");
-		if (Part->Is_Present)
-			printf("IsPresent ");
-		if (Part->Can_Be_Encrypted)
-			printf("Can_Be_Encrypted ");
-		if (Part->Is_Encrypted)
-			printf("Is_Encrypted ");
-		if (Part->Is_Decrypted)
-			printf("Is_Decrypted ");
-		if (Part->Has_Data_Media)
-			printf("Has_Data_Media ");
-		if (Part->Has_Android_Secure)
-			printf("Has_Android_Secure ");
-		if (Part->Is_Storage)
-			printf("Is_Storage ");
-		printf("\n");
-		if (!Part->SubPartition_Of.empty())
-			printf("   SubPartition_Of: %s\n", Part->SubPartition_Of.c_str());
-		if (!Part->Symlink_Path.empty())
-			printf("   Symlink_Path: %s\n", Part->Symlink_Path.c_str());
-		if (!Part->Symlink_Mount_Point.empty())
-			printf("   Symlink_Mount_Point: %s\n", Part->Symlink_Mount_Point.c_str());
-		if (!Part->Primary_Block_Device.empty())
-			printf("   Primary_Block_Device: %s\n", Part->Primary_Block_Device.c_str());
-		if (!Part->Alternate_Block_Device.empty())
-			printf("   Alternate_Block_Device: %s\n", Part->Alternate_Block_Device.c_str());
-		if (!Part->Decrypted_Block_Device.empty())
-			printf("   Decrypted_Block_Device: %s\n", Part->Decrypted_Block_Device.c_str());
-		if (Part->Length != 0)
-			printf("   Length: %i\n", Part->Length);
-		if (!Part->Display_Name.empty())
-			printf("   Display_Name: %s\n", Part->Display_Name.c_str());
-		if (!Part->Backup_Path.empty())
-			printf("   Backup_Path: %s\n", Part->Backup_Path.c_str());
-		if (!Part->Backup_Name.empty())
-			printf("   Backup_Name: %s\n", Part->Backup_Name.c_str());
-		if (!Part->Backup_FileName.empty())
-			printf("   Backup_FileName: %s\n", Part->Backup_FileName.c_str());
-		if (!Part->Storage_Path.empty())
-			printf("   Storage_Path: %s\n", Part->Storage_Path.c_str());
-		if (!Part->Current_File_System.empty())
-			printf("   Current_File_System: %s\n", Part->Current_File_System.c_str());
-		if (!Part->Fstab_File_System.empty())
-			printf("   Fstab_File_System: %s\n", Part->Fstab_File_System.c_str());
-		if (Part->Format_Block_Size != 0)
-			printf("   Format_Block_Size: %i\n", Part->Format_Block_Size);
-	} else {
-		printf("%s | %s | Size: %iMB\n", Part->Mount_Point.c_str(), Part->Actual_Block_Device.c_str(), (int)(Part->Size / mb));
+		printf(" Used: %iMB Free: %iMB Backup Size: %iMB", (int)(Part->Used / mb), (int)(Part->Free / mb), (int)(Part->Backup_Size / mb));
 	}
+	printf("\n   Flags: ");
+	if (Part->Can_Be_Wiped)
+		printf("Can_Be_Wiped ");
+	if (Part->Wipe_During_Factory_Reset)
+		printf("Wipe_During_Factory_Reset ");
+	if (Part->Wipe_Available_in_GUI)
+		printf("Wipe_Available_in_GUI ");
+	if (Part->Is_SubPartition)
+		printf("Is_SubPartition ");
+	if (Part->Has_SubPartition)
+		printf("Has_SubPartition ");
+	if (Part->Removable)
+		printf("Removable ");
+	if (Part->Is_Present)
+		printf("IsPresent ");
+	if (Part->Can_Be_Encrypted)
+		printf("Can_Be_Encrypted ");
+	if (Part->Is_Encrypted)
+		printf("Is_Encrypted ");
+	if (Part->Is_Decrypted)
+		printf("Is_Decrypted ");
+	if (Part->Has_Data_Media)
+		printf("Has_Data_Media ");
+	if (Part->Has_Android_Secure)
+		printf("Has_Android_Secure ");
+	if (Part->Is_Storage)
+		printf("Is_Storage ");
+	if (Part->Ignore_Blkid)
+		printf("Ignore_Blkid ");
+	if (Part->Retain_Layout_Version)
+		printf("Retain_Layout_Version ");
+	printf("\n");
+	if (!Part->SubPartition_Of.empty())
+		printf("   SubPartition_Of: %s\n", Part->SubPartition_Of.c_str());
+	if (!Part->Symlink_Path.empty())
+		printf("   Symlink_Path: %s\n", Part->Symlink_Path.c_str());
+	if (!Part->Symlink_Mount_Point.empty())
+		printf("   Symlink_Mount_Point: %s\n", Part->Symlink_Mount_Point.c_str());
+	if (!Part->Primary_Block_Device.empty())
+		printf("   Primary_Block_Device: %s\n", Part->Primary_Block_Device.c_str());
+	if (!Part->Alternate_Block_Device.empty())
+		printf("   Alternate_Block_Device: %s\n", Part->Alternate_Block_Device.c_str());
+	if (!Part->Decrypted_Block_Device.empty())
+		printf("   Decrypted_Block_Device: %s\n", Part->Decrypted_Block_Device.c_str());
+	if (Part->Length != 0)
+		printf("   Length: %i\n", Part->Length);
+	if (!Part->Display_Name.empty())
+		printf("   Display_Name: %s\n", Part->Display_Name.c_str());
+	if (!Part->Backup_Path.empty())
+		printf("   Backup_Path: %s\n", Part->Backup_Path.c_str());
+	if (!Part->Backup_Name.empty())
+		printf("   Backup_Name: %s\n", Part->Backup_Name.c_str());
+	if (!Part->Backup_FileName.empty())
+		printf("   Backup_FileName: %s\n", Part->Backup_FileName.c_str());
+	if (!Part->Storage_Path.empty())
+		printf("   Storage_Path: %s\n", Part->Storage_Path.c_str());
+	if (!Part->Current_File_System.empty())
+		printf("   Current_File_System: %s\n", Part->Current_File_System.c_str());
+	if (!Part->Fstab_File_System.empty())
+		printf("   Fstab_File_System: %s\n", Part->Fstab_File_System.c_str());
+	if (Part->Format_Block_Size != 0)
+		printf("   Format_Block_Size: %i\n", Part->Format_Block_Size);
 	if (!Part->MTD_Name.empty())
 		printf("   MTD_Name: %s\n", Part->MTD_Name.c_str());
 	string back_meth = Part->Backup_Method_By_Name();
@@ -476,18 +478,20 @@ int TWPartitionManager::Check_Backup_Name(bool Display_Error) {
 
 bool TWPartitionManager::Make_MD5(bool generate_md5, string Backup_Folder, string Backup_Filename)
 {
-	char command[512];
+	string command;
 	string Full_File = Backup_Folder + Backup_Filename;
+	string result;
 
-	if (!generate_md5)
+	if (!generate_md5) 
 		return true;
 
 	TWFunc::GUI_Operation_Text(TW_GENERATE_MD5_TEXT, "Generating MD5");
 	ui_print(" * Generating md5...\n");
 
 	if (TWFunc::Path_Exists(Full_File)) {
-		sprintf(command, "cd '%s' && md5sum %s > %s.md5",Backup_Folder.c_str(), Backup_Filename.c_str(), Backup_Filename.c_str());
-		if (system(command) == 0) {
+		command = "md5sum " + Backup_Filename + " > " + Backup_Filename + ".md5";
+		chdir(Backup_Folder.c_str());
+		if (TWFunc::Exec_Cmd(command, result) == 0) {
 			ui_print(" * MD5 Created.\n");
 			return true;
 		} else {
@@ -497,11 +501,15 @@ bool TWPartitionManager::Make_MD5(bool generate_md5, string Backup_Folder, strin
 	} else {
 		char filename[512];
 		int index = 0;
-
 		sprintf(filename, "%s%03i", Full_File.c_str(), index);
 		while (TWFunc::Path_Exists(filename) == true) {
-			sprintf(command, "cd '%s' && md5sum %s%03i > %s%03i.md5",Backup_Folder.c_str(), Backup_Filename.c_str(), index, Backup_Filename.c_str(), index);
-			if (system(command) != 0) {
+			ostringstream intToStr;
+			intToStr << index;
+			ostringstream fn;
+			fn << setw(3) << setfill('0') << intToStr.str();
+			command = "md5sum " + Backup_Filename + fn.str() + " >"  + Backup_Filename + fn.str() + ".md5";
+			chdir(Backup_Folder.c_str());
+			if (TWFunc::Exec_Cmd(command, result) != 0) {
 				ui_print(" * MD5 Error.\n");
 				return false;
 			}
@@ -596,17 +604,6 @@ int TWPartitionManager::Run_Backup(void) {
 	unsigned long long total_bytes = 0, file_bytes = 0, img_bytes = 0, free_space = 0, img_bytes_remaining, file_bytes_remaining, subpart_size;
 	unsigned long img_time = 0, file_time = 0;
 	TWPartition* backup_sys = NULL;
-
-	backup_sys = Find_Partition_By_Path("/and-sec");
-	backup_sys->Backup_Path = "/and-sec";
-	backup_sys = Find_Partition_By_Path("/cache");
-	backup_sys->Backup_Path = "/cache";
-	backup_sys = Find_Partition_By_Path("/data");
-	backup_sys->Backup_Path = "/data";
-	backup_sys = Find_Partition_By_Path("/system");
-	backup_sys->Backup_Path = "/system";
-	backup_sys = NULL;
-
 	TWPartition* backup_data = NULL;
 	TWPartition* backup_cache = NULL;
 	TWPartition* backup_recovery = NULL;
@@ -894,7 +891,7 @@ int TWPartitionManager::Run_Backup(void) {
 	Update_System_Details();
 	UnMount_Main_Partitions();
 	ui_print("[BACKUP COMPLETED IN %d SECONDS]\n\n", total_time); // the end
-    return true;
+    	return true;
 }
 
 bool TWPartitionManager::Restore_Partition(TWPartition* Part, string Restore_Name, int partition_count) {
@@ -1146,69 +1143,6 @@ void TWPartitionManager::Set_Restore_Files(string Restore_Name) {
 			get_date = false;
 		}
 
-		if (strcmp(str, ".android_secure.vfat.tar") == 0 || strcmp(str, ".android_secure.vfat.tar.a") == 0)
-		{
-			TWPartition* Part = Find_Partition_By_Path("/and-sec");
-			Part->Backup_FileName = de->d_name;
-			Part->Backup_Path = "/and_sec";
-			tw_restore_andsec = 1;
-			system("mkdir -p /and_sec/.android_secure");
-			system("mount /sdcard/.android_secure /and_sec/.android_secure");
-			continue;
-		}
-		if (strcmp(str, "boot.img") == 0)
-		{
-			TWPartition* Part = Find_Partition_By_Path("/boot");
-			Part->Backup_FileName = de->d_name;
-			Part->Backup_Path = "/boot";
-			tw_restore_boot = 1;
-			continue;
-		}
-		if (strcmp(str, "recovery.img") == 0)
-		{
-			TWPartition* Part = Find_Partition_By_Path("/recovery");
-			Part->Backup_FileName = de->d_name;
-			Part->Backup_Path = "/recovery";
-			tw_restore_recovery = 1;
-			continue;
-		}
-		if (strcmp(str, "cache.ext4.tar") == 0 || strcmp(str, "cache.ext4.tar.a") == 0)
-		{
-			TWPartition* Part = Find_Partition_By_Path("/cache");
-			Part->Backup_FileName = de->d_name;
-			Part->Backup_Path = "/";
-			tw_restore_cache = 1;
-			continue;
-		}
-		if (strcmp(str, "data.ext4.tar") == 0 || strcmp(str, "data.ext4.tar.a") == 0)
-		{
-			TWPartition* Part = Find_Partition_By_Path("/data");
-			Part->Backup_FileName = de->d_name;
-			Part->Backup_Path = "/";
-			tw_restore_data = 1;
-			continue;
-		}
-		if (strcmp(str, "system.ext4.tar") == 0 || strcmp(str, "system.ext4.tar.a") == 0)
-		{
-			TWPartition* Part = Find_Partition_By_Path("/system");
-			Part->Backup_FileName = de->d_name;
-			Part->Backup_Path = "/";
-			tw_restore_system = 1;
-			continue;
-		}
-		if (strcmp(str, "nandroid.md5") == 0)
-		{
-			continue;
-		}
-		TWPartition* Part = Find_Partition_By_Path("/and-sec");
-		Part->Backup_Path = "/and-sec";
-		Part = Find_Partition_By_Path("/cache");
-		Part->Backup_Path = "/cache";
-		Part = Find_Partition_By_Path("/data");
-		Part->Backup_Path = "/data";
-		Part = Find_Partition_By_Path("/system");
-		Part->Backup_Path = "/system";
-
 		label = str;
 		ptr = label;
 		while (*ptr && *ptr != '.')	 ptr++;
@@ -1228,7 +1162,7 @@ void TWPartitionManager::Set_Restore_Files(string Restore_Name) {
 
 		if (extn == NULL || (strlen(extn) >= 3 && strncmp(extn, "win", 3) != 0))   continue;
 
-		Part = Find_Partition_By_Path(label);
+		TWPartition* Part = Find_Partition_By_Path(label);
 		if (Part == NULL)
 		{
 			LOGE(" Unable to locate partition by backup name: '%s'\n", label);
@@ -1366,6 +1300,7 @@ int TWPartitionManager::Factory_Reset(void) {
 
 int TWPartitionManager::Wipe_Dalvik_Cache(void) {
 	struct stat st;
+	vector <string> dir;
 
 	if (!Mount_By_Path("/data", true))
 		return false;
@@ -1373,23 +1308,25 @@ int TWPartitionManager::Wipe_Dalvik_Cache(void) {
 	if (!Mount_By_Path("/cache", true))
 		return false;
 
+	dir.push_back("/data/dalvik-cache");
+	dir.push_back("/cache/dalvik-cache");
+	dir.push_back("/cache/dc");
 	ui_print("\nWiping Dalvik Cache Directories...\n");
-	system("rm -rf /data/dalvik-cache");
-	ui_print("Cleaned: /data/dalvik-cache...\n");
-	system("rm -rf /cache/dalvik-cache");
-	ui_print("Cleaned: /cache/dalvik-cache...\n");
-	system("rm -rf /cache/dc");
-	ui_print("Cleaned: /cache/dc\n");
-
+	for (int i = 0; i < dir.size(); ++i) {
+		if (stat(dir.at(i).c_str(), &st) == 0) {
+			TWFunc::removeDir(dir.at(i), false);
+			ui_print("Cleaned: %s...\n", dir.at(i).c_str());
+		}
+	}
 	TWPartition* sdext = Find_Partition_By_Path("/sd-ext");
 	if (sdext != NULL) {
 		if (sdext->Is_Present && sdext->Mount(false)) {
 			if (stat("/sd-ext/dalvik-cache", &st) == 0) {
-                system("rm -rf /sd-ext/dalvik-cache");
-        	    ui_print("Cleaned: /sd-ext/dalvik-cache...\n");
-    	    }
+				TWFunc::removeDir("/sd-ext/dalvik-cache", false);
+        	    		ui_print("Cleaned: /sd-ext/dalvik-cache...\n");
+			}
+		}
         }
-	}
 	ui_print("-- Dalvik Cache Directories Wipe Complete!\n\n");
 	return true;
 }
@@ -1398,9 +1335,8 @@ int TWPartitionManager::Wipe_Rotate_Data(void) {
 	if (!Mount_By_Path("/data", true))
 		return false;
 
-	system("rm -r /data/misc/akmd*");
-	system("rm -r /data/misc/rild*");
-	system("rm -r /data/misc/rild*");
+	unlink("/data/misc/akmd*");
+	unlink("/data/misc/rild*");
 	ui_print("Rotation data wiped.\n");
 	return true;
 }
@@ -1467,8 +1403,9 @@ int TWPartitionManager::Wipe_Media_From_Data(void) {
 			return false;
 
 		ui_print("Wiping internal storage -- /data/media...\n");
-		system("rm -rf /data/media");
-		system("cd /data && mkdir media && chmod 775 media");
+		TWFunc::removeDir("/data/media", false);
+		if (mkdir("/data/media", S_IRWXU | S_IRWXG | S_IWGRP | S_IXGRP) != 0)
+			return -1;
 		if (dat->Has_Data_Media) {
 			dat->Recreate_Media_Folder();
 		}
@@ -1562,6 +1499,8 @@ void TWPartitionManager::Update_System_Details(void) {
 					DataManager::SetValue(TW_BACKUP_RECOVERY_VAR, 0);
 				} else
 					DataManager::SetValue(TW_HAS_RECOVERY_PARTITION, 1);
+			} else if ((*iter)->Mount_Point == "/data") {
+				data_size += (int)((*iter)->Backup_Size / 1048576LLU);
 			}
 #ifdef SP1_NAME
 			if ((*iter)->Backup_Name == EXPAND(SP1_NAME)) {
@@ -1644,12 +1583,46 @@ int TWPartitionManager::Decrypt_Device(string Password) {
 	property_set("ro.crypto.fs_options", CRYPTO_FS_OPTIONS);
 	property_set("ro.crypto.fs_flags", CRYPTO_FS_FLAGS);
 	property_set("ro.crypto.keyfile.userdata", CRYPTO_KEY_LOC);
+
+#ifdef CRYPTO_SD_FS_TYPE
+    property_set("ro.crypto.sd_fs_type", CRYPTO_SD_FS_TYPE);
+    property_set("ro.crypto.sd_fs_real_blkdev", CRYPTO_SD_REAL_BLKDEV);
+    property_set("ro.crypto.sd_fs_mnt_point", EXPAND(TW_INTERNAL_STORAGE_PATH));
 #endif
+
+    property_set("rw.km_fips_status", "ready");
+
+#endif
+
+	// some samsung devices store "footer" on efs partition
+	TWPartition *efs = Find_Partition_By_Path("/efs");
+	if(efs && !efs->Is_Mounted())
+		efs->Mount(false);
+	else
+		efs = 0;
+#ifdef TW_EXTERNAL_STORAGE_PATH
+#ifdef TW_INCLUDE_CRYPTO_SAMSUNG
+	TWPartition* sdcard = Find_Partition_By_Path(EXPAND(TW_EXTERNAL_STORAGE_PATH));
+	if (sdcard && sdcard->Mount(false)) {
+		property_set("ro.crypto.external_encrypted", "1");
+		property_set("ro.crypto.external_blkdev", sdcard->Actual_Block_Device.c_str());
+	} else {
+		property_set("ro.crypto.external_encrypted", "0");
+	}
+#endif
+#endif
+
 	strcpy(cPassword, Password.c_str());
-	if (cryptfs_check_passwd(cPassword) != 0) {
+	int pwret = cryptfs_check_passwd(cPassword);
+
+	if (pwret != 0) {
 		LOGE("Failed to decrypt data.\n");
 		return -1;
 	}
+
+	if(efs)
+		efs->UnMount(false);
+
 	property_get("ro.crypto.fs_crypto_blkdev", crypto_blkdev, "error");
 	if (strcmp(crypto_blkdev, "error") == 0) {
 		LOGE("Error retrieving decrypted data block device.\n");
@@ -1660,7 +1633,43 @@ int TWPartitionManager::Decrypt_Device(string Password) {
 			DataManager::SetValue(TW_IS_DECRYPTED, 1);
 			dat->Is_Decrypted = true;
 			dat->Decrypted_Block_Device = crypto_blkdev;
+			dat->Setup_File_System(false);
 			ui_print("Data successfully decrypted, new block device: '%s'\n", crypto_blkdev);
+
+#ifdef CRYPTO_SD_FS_TYPE
+			char crypto_blkdev_sd[255];
+			property_get("ro.crypto.sd_fs_crypto_blkdev", crypto_blkdev_sd, "error");
+			if (strcmp(crypto_blkdev_sd, "error") == 0) {
+				LOGE("Error retrieving decrypted data block device.\n");
+			} else if(TWPartition* emmc = Find_Partition_By_Path(EXPAND(TW_INTERNAL_STORAGE_PATH))){
+				emmc->Is_Decrypted = true;
+				emmc->Decrypted_Block_Device = crypto_blkdev_sd;
+				emmc->Setup_File_System(false);
+				ui_print("Internal SD successfully decrypted, new block device: '%s'\n", crypto_blkdev_sd);
+			}
+#endif //ifdef CRYPTO_SD_FS_TYPE
+#ifdef TW_EXTERNAL_STORAGE_PATH
+#ifdef TW_INCLUDE_CRYPTO_SAMSUNG
+			char is_external_decrypted[255];
+			property_get("ro.crypto.external_use_ecryptfs", is_external_decrypted, "0");
+			if (strcmp(is_external_decrypted, "1") == 0) {
+				sdcard->Is_Decrypted = true;
+				sdcard->EcryptFS_Password = Password;
+				sdcard->Decrypted_Block_Device = sdcard->Actual_Block_Device;
+				string MetaEcfsFile = EXPAND(TW_EXTERNAL_STORAGE_PATH);
+				MetaEcfsFile += "/.MetaEcfsFile";
+				if (!TWFunc::Path_Exists(MetaEcfsFile)) {
+					// External storage isn't actually encrypted so unmount and remount without ecryptfs
+					sdcard->UnMount(false);
+					sdcard->Mount(false);
+				}
+			} else {
+				sdcard->Is_Decrypted = false;
+				sdcard->Decrypted_Block_Device = "";
+			}
+#endif
+#endif //ifdef TW_EXTERNAL_STORAGE_PATH
+
 			// Sleep for a bit so that the device will be ready
 			sleep(1);
 #ifdef RECOVERY_SDCARD_ON_DATA
@@ -1856,7 +1865,8 @@ int TWPartitionManager::Partition_SDCard(void) {
 		if (!SDext->UnMount(true))
 			return false;
 	}
-	system("umount \"$SWAPPATH\"");
+	string result;
+	TWFunc::Exec_Cmd("umount \"$SWAPPATH\"", result);
 	Device = SDCard->Actual_Block_Device;
 	// Just use the root block device
 	Device.resize(strlen("/dev/block/mmcblkX"));
@@ -1908,7 +1918,7 @@ int TWPartitionManager::Partition_SDCard(void) {
 	ui_print("Removing partition table...\n");
 	Command = "parted -s " + Device + " mklabel msdos";
 	LOGI("Command is: '%s'\n", Command.c_str());
-	if (system(Command.c_str()) != 0) {
+	if (TWFunc::Exec_Cmd(Command, result) != 0) {
 		LOGE("Unable to remove partition table.\n");
 		Update_System_Details();
 		return false;
@@ -1916,7 +1926,7 @@ int TWPartitionManager::Partition_SDCard(void) {
 	ui_print("Creating FAT32 partition...\n");
 	Command = "parted " + Device + " mkpartfs primary fat32 0 " + fat_str + "MB";
 	LOGI("Command is: '%s'\n", Command.c_str());
-	if (system(Command.c_str()) != 0) {
+	if (TWFunc::Exec_Cmd(Command, result) != 0) {
 		LOGE("Unable to create FAT32 partition.\n");
 		return false;
 	}
@@ -1924,7 +1934,7 @@ int TWPartitionManager::Partition_SDCard(void) {
 		ui_print("Creating EXT partition...\n");
 		Command = "parted " + Device + " mkpartfs primary ext2 " + fat_str + "MB " + ext_str + "MB";
 		LOGI("Command is: '%s'\n", Command.c_str());
-		if (system(Command.c_str()) != 0) {
+		if (TWFunc::Exec_Cmd(Command, result) != 0) {
 			LOGE("Unable to create EXT partition.\n");
 			Update_System_Details();
 			return false;
@@ -1934,7 +1944,7 @@ int TWPartitionManager::Partition_SDCard(void) {
 		ui_print("Creating swap partition...\n");
 		Command = "parted " + Device + " mkpartfs primary linux-swap " + ext_str + "MB " + swap_str + "MB";
 		LOGI("Command is: '%s'\n", Command.c_str());
-		if (system(Command.c_str()) != 0) {
+		if (TWFunc::Exec_Cmd(Command, result) != 0) {
 			LOGE("Unable to create swap partition.\n");
 			Update_System_Details();
 			return false;
@@ -1969,7 +1979,7 @@ int TWPartitionManager::Partition_SDCard(void) {
 		Command = "mke2fs -t " + ext_format + " -m 0 " + SDext->Actual_Block_Device;
 		ui_print("Formatting sd-ext as %s...\n", ext_format.c_str());
 		LOGI("Formatting sd-ext after partitioning, command: '%s'\n", Command.c_str());
-		system(Command.c_str());
+		TWFunc::Exec_Cmd(Command, result);
 	}
 
 	Update_System_Details();
