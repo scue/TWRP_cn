@@ -1,6 +1,3 @@
-说明2.6内核的adb sideload无法使用
-
-
 **基于TWRP2.4汉化,支持中文字符**
 
 已生成部分字库,默认为32号雅黑字体(font\_cn\_32x32.h),可使用BOARD\_USE\_CUSTOM\_RECOVERY\_FONT指定字体
