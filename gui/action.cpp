@@ -249,21 +249,18 @@ int GUIAction::doActions()
 		LOGE("Error setting pthread_attr_setscope\n");
 		return -1;
 	}
-	if (pthread_attr_setstacksize(&tattr, 524288)) {
+	/*if (pthread_attr_setstacksize(&tattr, 524288)) {
 		LOGE("Error setting pthread_attr_setstacksize\n");
 		return -1;
 	}
-	LOGI("creating thread\n");
+	*/
 	int ret = pthread_create(&t, &tattr, thread_start, this);
-	LOGI("after thread creation\n");
     if (ret) {
 		LOGE("Unable to create more threads for actions... continuing in same thread! %i\n", ret);
 		thread_start(this);
 	} else {
 		if (pthread_join(t, NULL)) {
 			LOGE("Error joining threads\n");
-		} else {
-			LOGI("Thread joined\n");
 		}
 	}
 	if (pthread_attr_destroy(&tattr)) {
@@ -1013,15 +1010,6 @@ int GUIAction::doAction(Action action, int isThreaded /* = 0 */)
 					int load_theme = 1;
 
 					DataManager::SetValue(TW_IS_ENCRYPTED, 0);
-					DataManager::ReadSettingsFile();
-					if (OpenRecoveryScript::check_for_script_file()) {
-						ui_print("Processing OpenRecoveryScript file...\n");
-						if (OpenRecoveryScript::run_script_file() == 0) {
-							usleep(2000000); // Sleep for 2 seconds before rebooting
-							TWFunc::tw_reboot(rb_system);
-							load_theme = 0;
-						}
-					}
 
 					if (load_theme) {
 						int has_datamedia;
@@ -1068,6 +1056,7 @@ int GUIAction::doAction(Action action, int isThreaded /* = 0 */)
 				simulate_progress_bar();
 			} else {
 				int wipe_cache = 0;
+				int wipe_dalvik = 0;
 				string result, Sideload_File;
 
 				if (!PartitionManager.Mount_Current_Storage(true)) {
@@ -1079,11 +1068,16 @@ int GUIAction::doAction(Action action, int isThreaded /* = 0 */)
 					unlink(Sideload_File.c_str());
 				}
 				ui_print("Starting ADB sideload feature...\n");
+				DataManager::GetValue("tw_wipe_dalvik", wipe_dalvik);
 				ret = apply_from_adb(ui, &wipe_cache, Sideload_File.c_str());
-				if (ret != 0)
+				if (ret != 0) {
 					ret = 1; // failure
-				else if (wipe_cache)
-					PartitionManager.Wipe_By_Path("/cache");
+				} else {
+					if (wipe_cache || DataManager::GetIntValue("tw_wipe_cache"))
+						PartitionManager.Wipe_By_Path("/cache");
+					if (wipe_dalvik)
+						PartitionManager.Wipe_Dalvik_Cache();
+				}
 				if (DataManager::GetIntValue(TW_HAS_INJECTTWRP) == 1 && DataManager::GetIntValue(TW_INJECT_AFTER_ZIP) == 1) {
 					operation_start("ReinjectTWRP");
 					ui_print("Injecting TWRP into boot image...\n");
@@ -1113,7 +1107,38 @@ int GUIAction::doAction(Action action, int isThreaded /* = 0 */)
 			DataManager::GetValue("tw_child_pid", child_pid);
 			ui_print("Cancelling ADB sideload...\n");
 			kill(child_pid, SIGTERM);
+			DataManager::SetValue("tw_page_done", "1"); // For OpenRecoveryScript support
 			return 0;
+		}
+		if (function == "openrecoveryscript") {
+			operation_start("OpenRecoveryScript");
+			if (simulate) {
+				simulate_progress_bar();
+			} else {
+				// Check for the SCRIPT_FILE_TMP first as these are AOSP recovery commands
+				// that we converted to ORS commands during boot in recovery.cpp.
+				// Run those first.
+				int reboot = 0;
+				if (TWFunc::Path_Exists(SCRIPT_FILE_TMP)) {
+					ui_print("Processing AOSP recovery commands...\n");
+					if (OpenRecoveryScript::run_script_file() == 0) {
+						reboot = 1;
+					}
+				}
+				// Check for the ORS file in /cache and attempt to run those commands.
+				if (OpenRecoveryScript::check_for_script_file()) {
+					ui_print("Processing OpenRecoveryScript file...\n");
+					if (OpenRecoveryScript::run_script_file() == 0) {
+						reboot = 1;
+					}
+				}
+				if (reboot) {
+					usleep(2000000); // Sleep for 2 seconds before rebooting
+					TWFunc::tw_reboot(rb_system);
+				} else {
+					DataManager::SetValue("tw_page_done", 1);
+				}
+			}
 		}
     }
     else
