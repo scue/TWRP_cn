@@ -489,8 +489,7 @@ bool TWPartitionManager::Make_MD5(bool generate_md5, string Backup_Folder, strin
 	ui_print(" * Generating md5...\n");
 
 	if (TWFunc::Path_Exists(Full_File)) {
-		command = "md5sum " + Backup_Filename + " > " + Backup_Filename + ".md5";
-		chdir(Backup_Folder.c_str());
+		command = "cd '" + Backup_Folder + "' && md5sum '" + Backup_Filename + "' > '" + Backup_Filename + ".md5'";
 		if (TWFunc::Exec_Cmd(command, result) == 0) {
 			ui_print(" * MD5 Created.\n");
 			return true;
@@ -507,8 +506,7 @@ bool TWPartitionManager::Make_MD5(bool generate_md5, string Backup_Folder, strin
 			intToStr << index;
 			ostringstream fn;
 			fn << setw(3) << setfill('0') << intToStr.str();
-			command = "md5sum " + Backup_Filename + fn.str() + " >"  + Backup_Filename + fn.str() + ".md5";
-			chdir(Backup_Folder.c_str());
+			command = "cd '" + Backup_Folder + "' && md5sum '" + Backup_Filename + fn.str() + "' > '"  + Backup_Filename + fn.str() + ".md5'";
 			if (TWFunc::Exec_Cmd(command, result) != 0) {
 				ui_print(" * MD5 Error.\n");
 				return false;
@@ -644,13 +642,6 @@ int TWPartitionManager::Run_Backup(void) {
 	Full_Backup_Path = Backup_Folder + "/" + Backup_Name + "/";
 	LOGI("Full_Backup_Path is: '%s'\n", Full_Backup_Path.c_str());
 
-	ui_print("\n[BACKUP STARTED]\n");
-    ui_print(" * Backup Folder: %s\n", Full_Backup_Path.c_str());
-	if (!TWFunc::Recursive_Mkdir(Full_Backup_Path)) {
-		LOGE("Failed to make backup folder.\n");
-		return false;
-	}
-
 	LOGI("Calculating backup details...\n");
 	DataManager::GetValue(TW_BACKUP_SYSTEM_VAR, check);
 	if (check) {
@@ -663,7 +654,7 @@ int TWPartitionManager::Run_Backup(void) {
 				img_bytes += backup_sys->Backup_Size;
 		} else {
 			LOGE("Unable to locate system partition.\n");
-			return false;
+			DataManager::SetValue(TW_BACKUP_SYSTEM_VAR, 0);
 		}
 	}
 	DataManager::GetValue(TW_BACKUP_DATA_VAR, check);
@@ -684,7 +675,7 @@ int TWPartitionManager::Run_Backup(void) {
 				img_bytes += backup_data->Backup_Size + subpart_size;
 		} else {
 			LOGE("Unable to locate data partition.\n");
-			return false;
+			DataManager::SetValue(TW_BACKUP_DATA_VAR, 0);
 		}
 	}
 	DataManager::GetValue(TW_BACKUP_CACHE_VAR, check);
@@ -698,7 +689,7 @@ int TWPartitionManager::Run_Backup(void) {
 				img_bytes += backup_cache->Backup_Size;
 		} else {
 			LOGE("Unable to locate cache partition.\n");
-			return false;
+			DataManager::SetValue(TW_BACKUP_CACHE_VAR, 0);
 		}
 	}
 	DataManager::GetValue(TW_BACKUP_RECOVERY_VAR, check);
@@ -712,7 +703,7 @@ int TWPartitionManager::Run_Backup(void) {
 				img_bytes += backup_recovery->Backup_Size;
 		} else {
 			LOGE("Unable to locate recovery partition.\n");
-			return false;
+			DataManager::SetValue(TW_BACKUP_RECOVERY_VAR, 0);
 		}
 	}
 	DataManager::GetValue(TW_BACKUP_BOOT_VAR, check);
@@ -726,7 +717,7 @@ int TWPartitionManager::Run_Backup(void) {
 				img_bytes += backup_boot->Backup_Size;
 		} else {
 			LOGE("Unable to locate boot partition.\n");
-			return false;
+			DataManager::SetValue(TW_BACKUP_BOOT_VAR, 0);
 		}
 	}
 	DataManager::GetValue(TW_BACKUP_ANDSEC_VAR, check);
@@ -740,7 +731,7 @@ int TWPartitionManager::Run_Backup(void) {
 				img_bytes += backup_andsec->Backup_Size;
 		} else {
 			LOGE("Unable to locate android secure partition.\n");
-			return false;
+			DataManager::SetValue(TW_BACKUP_ANDSEC_VAR, 0);
 		}
 	}
 	DataManager::GetValue(TW_BACKUP_SDEXT_VAR, check);
@@ -754,7 +745,7 @@ int TWPartitionManager::Run_Backup(void) {
 				img_bytes += backup_sdext->Backup_Size;
 		} else {
 			LOGE("Unable to locate sd-ext partition.\n");
-			return false;
+			DataManager::SetValue(TW_BACKUP_SDEXT_VAR, 0);
 		}
 	}
 #ifdef SP1_NAME
@@ -769,7 +760,7 @@ int TWPartitionManager::Run_Backup(void) {
 				img_bytes += backup_sp1->Backup_Size;
 		} else {
 			LOGE("Unable to locate %s partition.\n", EXPAND(SP1_NAME));
-			return false;
+			DataManager::SetValue(TW_BACKUP_SP1_VAR, 0);
 		}
 	}
 #endif
@@ -785,7 +776,7 @@ int TWPartitionManager::Run_Backup(void) {
 				img_bytes += backup_sp2->Backup_Size;
 		} else {
 			LOGE("Unable to locate %s partition.\n", EXPAND(SP2_NAME));
-			return false;
+			DataManager::SetValue(TW_BACKUP_SP2_VAR, 0);
 		}
 	}
 #endif
@@ -801,7 +792,7 @@ int TWPartitionManager::Run_Backup(void) {
 				img_bytes += backup_sp3->Backup_Size;
 		} else {
 			LOGE("Unable to locate %s partition.\n", EXPAND(SP3_NAME));
-			return false;
+			DataManager::SetValue(TW_BACKUP_SP3_VAR, 0);
 		}
 	}
 #endif
@@ -821,13 +812,20 @@ int TWPartitionManager::Run_Backup(void) {
 		LOGE("Unable to locate storage device.\n");
 		return false;
 	}
-	if (free_space + (32 * 1024 * 1024) < total_bytes) {
+	if (free_space - (32 * 1024 * 1024) < total_bytes) {
 		// We require an extra 32MB just in case
 		LOGE("Not enough free space on storage.\n");
 		return false;
 	}
 	img_bytes_remaining = img_bytes;
     file_bytes_remaining = file_bytes;
+
+	ui_print("\n[BACKUP STARTED]\n");
+	ui_print(" * Backup Folder: %s\n", Full_Backup_Path.c_str());
+	if (!TWFunc::Recursive_Mkdir(Full_Backup_Path)) {
+		LOGE("Failed to make backup folder.\n");
+		return false;
+	}
 
 	ui->SetProgress(0.0);
 
@@ -891,7 +889,9 @@ int TWPartitionManager::Run_Backup(void) {
 	Update_System_Details();
 	UnMount_Main_Partitions();
 	ui_print("[BACKUP COMPLETED IN %d SECONDS]\n\n", total_time); // the end
-    	return true;
+	string backup_log = Full_Backup_Path + "recovery.log";
+	TWFunc::copy_file("/tmp/recovery.log", backup_log, 0644);
+	return true;
 }
 
 bool TWPartitionManager::Restore_Partition(TWPartition* Part, string Restore_Name, int partition_count) {
@@ -941,54 +941,54 @@ int TWPartitionManager::Run_Restore(string Restore_Name) {
 		restore_sys = Find_Partition_By_Path("/system");
 		if (restore_sys == NULL) {
 			LOGE("Unable to locate system partition.\n");
-			return false;
+		} else {
+			partition_count++;
 		}
-		partition_count++;
 	}
 	DataManager::GetValue(TW_RESTORE_DATA_VAR, check);
 	if (check > 0) {
 		restore_data = Find_Partition_By_Path("/data");
 		if (restore_data == NULL) {
 			LOGE("Unable to locate data partition.\n");
-			return false;
+		} else {
+			partition_count++;
 		}
-		partition_count++;
 	}
 	DataManager::GetValue(TW_RESTORE_CACHE_VAR, check);
 	if (check > 0) {
 		restore_cache = Find_Partition_By_Path("/cache");
 		if (restore_cache == NULL) {
 			LOGE("Unable to locate cache partition.\n");
-			return false;
+		} else {
+			partition_count++;
 		}
-		partition_count++;
 	}
 	DataManager::GetValue(TW_RESTORE_BOOT_VAR, check);
 	if (check > 0) {
 		restore_boot = Find_Partition_By_Path("/boot");
 		if (restore_boot == NULL) {
 			LOGE("Unable to locate boot partition.\n");
-			return false;
+		} else {
+			partition_count++;
 		}
-		partition_count++;
 	}
 	DataManager::GetValue(TW_RESTORE_ANDSEC_VAR, check);
 	if (check > 0) {
 		restore_andsec = Find_Partition_By_Path("/and-sec");
 		if (restore_andsec == NULL) {
 			LOGE("Unable to locate android secure partition.\n");
-			return false;
+		} else {
+			partition_count++;
 		}
-		partition_count++;
 	}
 	DataManager::GetValue(TW_RESTORE_SDEXT_VAR, check);
 	if (check > 0) {
 		restore_sdext = Find_Partition_By_Path("/sd-ext");
 		if (restore_sdext == NULL) {
 			LOGE("Unable to locate sd-ext partition.\n");
-			return false;
+		} else {
+			partition_count++;
 		}
-		partition_count++;
 	}
 #ifdef SP1_NAME
 	DataManager::GetValue(TW_RESTORE_SP1_VAR, check);
@@ -996,9 +996,9 @@ int TWPartitionManager::Run_Restore(string Restore_Name) {
 		restore_sp1 = Find_Partition_By_Path(EXPAND(SP1_NAME));
 		if (restore_sp1 == NULL) {
 			LOGE("Unable to locate %s partition.\n", EXPAND(SP1_NAME));
-			return false;
+		} else {
+			partition_count++;
 		}
-		partition_count++;
 	}
 #endif
 #ifdef SP2_NAME
@@ -1007,9 +1007,9 @@ int TWPartitionManager::Run_Restore(string Restore_Name) {
 		restore_sp2 = Find_Partition_By_Path(EXPAND(SP2_NAME));
 		if (restore_sp2 == NULL) {
 			LOGE("Unable to locate %s partition.\n", EXPAND(SP2_NAME));
-			return false;
+		} else {
+			partition_count++;
 		}
-		partition_count++;
 	}
 #endif
 #ifdef SP3_NAME
@@ -1018,9 +1018,9 @@ int TWPartitionManager::Run_Restore(string Restore_Name) {
 		restore_sp3 = Find_Partition_By_Path(EXPAND(SP3_NAME));
 		if (restore_sp3 == NULL) {
 			LOGE("Unable to locate %s partition.\n", EXPAND(SP3_NAME));
-			return false;
+		} else {
+			partition_count++;
 		}
-		partition_count++;
 	}
 #endif
 
@@ -1679,6 +1679,7 @@ int TWPartitionManager::Decrypt_Device(string Password) {
 				DataManager::SetValue(TW_INTERNAL_PATH, "/data/media/0");
 				dat->UnMount(false);
 				DataManager::SetBackupFolder();
+				Output_Partition(dat);
 			}
 #endif
 			Update_System_Details();
@@ -1712,10 +1713,6 @@ int TWPartitionManager::Fix_Permissions(void) {
 }
 
 //partial kangbang from system/vold
-#ifndef CUSTOM_LUN_FILE
-#define CUSTOM_LUN_FILE "/sys/devices/platform/usb_mass_storage/lun%d/file"
-#endif
-
 int TWPartitionManager::Open_Lun_File(string Partition_Path, string Lun_File) {
 	int fd;
 	TWPartition* Part = Find_Partition_By_Path(Partition_Path);
