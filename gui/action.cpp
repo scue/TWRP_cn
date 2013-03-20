@@ -33,6 +33,10 @@ extern "C" {
 #include "../twinstall.h"
 
 #include "../minadbd/adb.h"
+#include <stddef.h>    
+
+static const char *SCRIPT_FILE_CACHE = "/cache/recovery/openrecoveryscript";
+static const char *SCRIPT_FILE_TMP = "/tmp/openrecoveryscript";
 
 int TWinstall_zip(const char* path, int* wipe_cache);
 void run_script(const char *str1, const char *str2, const char *str3, const char *str4, const char *str5, const char *str6, const char *str7, int request_confirm);

@@ -49,6 +49,9 @@ extern "C" {
 extern RecoveryUI* ui;
 #define SCRIPT_COMMAND_SIZE 512
 
+static const char *SCRIPT_FILE_CACHE = "/cache/recovery/openrecoveryscript";
+static const char *SCRIPT_FILE_TMP = "/tmp/openrecoveryscript";
+
 int OpenRecoveryScript::check_for_script_file(void) {
 	if (!PartitionManager.Mount_By_Path(SCRIPT_FILE_CACHE, false)) {
 		LOGE("Unable to mount /cache for OpenRecoveryScript support.\n");

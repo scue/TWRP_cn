@@ -45,6 +45,8 @@
 #include "screen_ui.h"
 #include "device.h"
 #include "adb_install.h"
+#include <stddef.h>
+
 extern "C" {
 #include "minadbd/adb.h"
 }
@@ -83,6 +85,9 @@ static const char *SDCARD_ROOT = "/sdcard";
 static const char *TEMPORARY_LOG_FILE = "/tmp/recovery.log";
 static const char *TEMPORARY_INSTALL_FILE = "/tmp/last_install";
 static const char *SIDELOAD_TEMP_DIR = "/tmp/sideload";
+
+static const char *SCRIPT_FILE_CACHE = "/cache/recovery/openrecoveryscript";
+static const char *SCRIPT_FILE_TMP = "/tmp/openrecoveryscript";
 
 RecoveryUI* ui = NULL;
 

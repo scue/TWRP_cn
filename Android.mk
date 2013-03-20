@@ -222,6 +222,10 @@ ifeq ($(TW_INCLUDE_JB_CRYPTO), true)
     LOCAL_C_INCLUDES += system/extras/ext4_utils external/openssl/include
 endif
 
+ifndef RECOVERY_FLAG_BLOCK
+	RECOVERY_FLAG_BLOCK	= 0
+endif
+
 ifeq ($(TARGET_BOARD_PLATFORM),rk30xx)
 LOCAL_CFLAGS += -DRK3066
 endif
